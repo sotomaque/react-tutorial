@@ -1,24 +1,58 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { CountProvider, useCount } from '../../context';
+import { styles } from './styles';
+import { useQuery, gql } from '@apollo/client';
+
+const USER_COUNT = gql`
+  query MyQuery {
+    users_aggregate {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
 
 const Home = () => {
-  const [count, setCount] = useState(0);
+  const { loading, error, data } = useQuery(USER_COUNT);
 
-  useEffect(() => {
-    console.log('Hi');
-  }, []);
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error :(</p>;
+  if (data) console.table(data);
+  return (
+    <CountProvider>
+      <ShowCurrentCount />
+      <InputForm />
+    </CountProvider>
+  );
+};
+
+const ShowCurrentCount = () => {
+  const { state } = useCount();
+
+  return <h2>{state.count}</h2>;
+};
+
+const InputForm = () => (
+  <div style={styles.button}>
+    <ActualForm />
+  </div>
+);
+
+const ActualForm = () => {
+  const { dispatch } = useCount();
 
   return (
-    <div>
-      <h2>{count === 0 ? 'CLICK BUTTON' : count}</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setCount((prev) => prev + 1);
-        }}
-      >
-        <button type="submit">Click Me</button>
-      </form>
-    </div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        dispatch({
+          type: 'increment',
+        });
+      }}
+    >
+      <button type="submit">Click Me</button>
+    </form>
   );
 };
 
